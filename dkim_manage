@@ -71,7 +71,7 @@ function displayrecord {
     echo "===== $1 DNS TXT RECORD====="
     echo ""
     # Perl regex from kerframil (#bash)
-    cat $TEMP/$1.txt | grep -Pzo 'v=DKIM1[^)]+(?=" )' | sed 's/h=rsa-sha256;/h=sha256;/' | perl -0e '$x = <>; print $x =~ s/"\s+"//sgr'
+    cat $TEMP/$1.txt | grep -Pzo 'v=DKIM1[^)]+(?=" )' | sed 's/h=rsa-sha256;/h=sha256;/' | perl -0e '$x = <>; $x =~ s/"\s+"//sg; print $x'
     echo ""
 }
 
