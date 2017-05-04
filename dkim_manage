@@ -53,7 +53,7 @@ USER=opendkim
 ### END VARIABLES
 
 # Get the current year and month.
-DATE=`date +%Y%m`
+DATE=$(date +%Y%m)
 
 # We'll work in a temporary directory for the moment.
 mkdir -p $TEMP
@@ -61,8 +61,8 @@ mkdir -p $TEMP
 # Function to generate the keys for a domain.
 function genkey {
     cd $TEMP
-    opendkim-genkey -b 2048 -h rsa-sha256 -r -s $DATE -d $1.$2 -v
-    rename "s/$DATE/$1$2/" *.*
+    opendkim-genkey -b 2048 -h rsa-sha256 -r -s "$DATE" -d "$1.$2" -v
+    rename "s/$DATE/$1$2/" ./*.*
 }
 
 # Display the text for our DNS update
@@ -70,7 +70,7 @@ function displayrecord {
     echo ""
     echo "===== $1 DNS TXT RECORD====="
     echo ""
-    # Perl regex from kerframil (#bash)
+    # Perl regex from @kerframil
     cat $TEMP/$1.txt | grep -Pzo 'v=DKIM1[^)]+(?=" )' | sed 's/h=rsa-sha256;/h=sha256;/' | perl -0e '$x = <>; $x =~ s/"\s+"//sg; print $x'
     echo ""
 }
@@ -110,33 +110,33 @@ function do_move {
 
 function do_test {
     # For each of the domains we're working with...
-    while read LINE; do
+    while read -r LINE; do
         IFS='.'
         set $LINE
         # Generate the keys
-        opendkim-testkey -d $1.$2 -s $DATE -k $TEMP/$1$2.private -vvv
+        opendkim-testkey -d "$1.$2" -s "$DATE" -k "$TEMP/$1$2.private" -vvv
     done <"$CONFIG"
     echo "Testing complete. If there are errors, DO NOT COPY."
 }
 
 function do_gen {
     # For each of the domains we're working with...
-    while read LINE; do
+    while read -r LINE; do
         IFS='.'
         set $LINE
         # Generate the keys
-        genkey $1 $2
+        genkey "$1 $2"
     done <"$CONFIG"
     echo "==========FINISHED==========="
     echo "Keys have been generated at $TEMP"
 }
 
 function do_display {
-    while read LINE; do
+    while read -r LINE; do
         IFS='.'
         set $LINE
         # Display the text records
-        displayrecord $1$2
+        displayrecord "$1$2"
     done <"$CONFIG"
 }
 
