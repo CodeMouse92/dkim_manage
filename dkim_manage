@@ -39,7 +39,7 @@ set -e
 CONFIG=/opt/scripts/root_scripts/domains.conf
 
 # Temporary directory for generating keys.
-TEMP=/tmp/dkim
+TEMP=/var/dkim_manage
 
 # The folder where OpenDKIM's keys are stored.
 PROD=/etc/opendkim/keys
