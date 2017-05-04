@@ -108,7 +108,18 @@ The key ownership will also be set (using the user and group specified by `USER`
 If you're **absolutely sure**, press "y" and ENTER. After a moment, the keys will have been moved, permissions updated,
 keytable modified, and both OpenDKIM and Postfix restarted.
 
+## Planned Changes
+
+- Provide an option to allow `dkim_manage -m` to run in a cron job.
+- Automatically generate DNS TXT record names, as well as the values, on `dkim_manage -d`.
+- Allow displaying the DNS TXT records for the currently deployed keys.
+- Back up keys on `dkim_manage -m` to allow for undo.
+
 ## Feedback
 
-If you experience any problems with this script, please file a bug report on the Github (githubcom/CodeMouse92/dkim_manage).
+If you experience any problems with this script, please file a bug report on the Github (github.com/CodeMouse92/dkim_manage).
 If you have any suggestions for improving this script, please submit a pull request.
+
+### Note about Automating DNS Changes
+
+I hope to add DNS change automation to this project at some point. However, that varies from system-to-system, and I want `dkim_manage` itself to work on any Linux system (within reason) running OpenDKIM. Therefore, any scripts added to this project for automatically updating DNS should be kept separate from the main script.
