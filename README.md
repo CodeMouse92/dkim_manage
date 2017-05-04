@@ -64,6 +64,8 @@ For convenience, you may consider adding the directory where `dkim_manage` lives
 There are **four steps** to rotating your OpenDKIM keys. Be sure to follow each carefully, as it is possible to mess up
 your OpenDKIM configuration or keys with improper use of this script.
 
+This script MUST be run as root!
+
 ### Step 1: Generate New Keys
 
 Be sure your `domain.conf` file is correct (see `Setup` above). Then, run...
