@@ -39,7 +39,7 @@ set -e
 CONFIG=/opt/scripts/root_scripts/domains.conf
 
 # Temporary directory for generating keys.
-TEMP=/tmp/dkms
+TEMP=/tmp/dkim
 
 # The folder where OpenDKIM's keys are stored.
 PROD=/etc/opendkim/keys
@@ -86,7 +86,7 @@ function do_move {
             systemctl stop opendkim postfix
 
             # Move the keys
-            cp $TEMP/*.private $PROD
+            cp $TEMP/* $PROD
 
             # Update the key.table
             cp ${KEYTABLE} ${KEYTABLE}.bak
