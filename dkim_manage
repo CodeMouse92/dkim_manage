@@ -1,0 +1,176 @@
+#!/bin/bash
+
+# OpenDKIM Manager
+# Automates regeneration, testing, and deployment of OpenDKIM keys.
+# AUTHOR(S): Jason C. McDonald
+# VERSION: 1.1
+
+# Copyright (c) 2017 MousePaw Media
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the <organization> nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Die on error.
+set -e
+
+### SYSTEM SPECIFIC VARIABLES - CHANGE TO MEET YOUR SYSTEM
+
+# Set the path to the configuration file for this script.
+CONFIG=/opt/scripts/root_scripts/domains.conf
+
+# Temporary directory for generating keys.
+TEMP=/tmp/dkms
+
+# The folder where OpenDKIM's keys are stored.
+PROD=/etc/opendkim/keys
+
+# The path to your OpenDKIM keytable.
+KEYTABLE=/etc/opendkim/key.table
+
+# The user for OpenDKIM, used for setting permissions on keys.
+USER=opendkim
+
+### END VARIABLES
+
+# Get the current year and month.
+DATE=`date +%Y%m`
+
+# We'll work in a temporary directory for the moment.
+mkdir -p $TEMP
+
+# Function to generate the keys for a domain.
+function genkey {
+    cd $TEMP
+    opendkim-genkey -b 2048 -h rsa-sha256 -r -s $DATE -d $1.$2 -v
+    rename "s/$DATE/$1$2/" *.*
+}
+
+# Display the text for our DNS update
+function displayrecord {
+    echo ""
+    echo "===== $1 DNS TXT RECORD====="
+    echo ""
+    # Perl regex from kerframil (#bash)
+    cat $TEMP/$1.txt | grep -Pzo 'v=DKIM1[^)]+(?=" )' | sed 's/h=rsa-sha256;/h=sha256;/' | perl -0e '$x = <>; print $x =~ s/"\s+"//sgr'
+    echo ""
+}
+
+function do_move {
+    echo "WARNING!"
+    echo "This will override your current keys. You should test first with the -t flag."
+    echo "This operation cannot be undone."
+    read -p "Are you SURE you want to continue? [y/N] " choice
+    case "$choice" in
+        y|Y )
+            # Stop the mail server.
+            systemctl stop opendkim postfix
+
+            # Move the keys
+            cp $TEMP/*.private $PROD
+
+            # Update the key.table
+            cp ${KEYTABLE} ${KEYTABLE}.bak
+            sed -ri "s/[0-9]+/${DATE}/g" ${KEYTABLE}
+
+            # Change the permissions.
+            chown ${USER}:${USER} $PROD/*
+            chmod go-rw $PROD/*
+
+            # Start the mail server.
+            systemctl start opendkim postfix
+
+            echo "==========FINISHED==========="
+            echo "Keys have been moved to $PROD"
+            ;;
+        * )
+            echo "Cancelled."
+            ;;
+    esac
+}
+
+function do_test {
+    # For each of the domains we're working with...
+    while read LINE; do
+        IFS='.'
+        set $LINE
+        # Generate the keys
+        opendkim-testkey -d $1.$2 -s $DATE -k $TEMP/$1$2.private -vvv
+    done <"$CONFIG"
+    echo "Testing complete. If there are errors, DO NOT COPY."
+}
+
+function do_gen {
+    # For each of the domains we're working with...
+    while read LINE; do
+        IFS='.'
+        set $LINE
+        # Generate the keys
+        genkey $1 $2
+    done <"$CONFIG"
+    echo "==========FINISHED==========="
+    echo "Keys have been generated at $TEMP"
+}
+
+function do_display {
+    while read LINE; do
+        IFS='.'
+        set $LINE
+        # Display the text records
+        displayrecord $1$2
+    done <"$CONFIG"
+}
+
+SUCCESS="0"
+while getopts ":hdgmt" opt; do
+    SUCCESS="1"
+    case $opt in
+        h)
+            echo "Automate DKIM key renewal."
+            echo "-d    Display DNS text record values in $TEMP."
+            echo "-g    Generate DKIM keys in $TEMP."
+            echo "-m    Move new keys from $TEMP into place."
+            echo "-t    Test the new keys before moving them."
+            ;;
+        d)
+            do_display
+            ;;
+        g)
+            do_gen
+            ;;
+        m)
+            do_move
+            ;;
+        t)
+            do_test
+            ;;
+        \?)
+            echo "Invalid option -$OPTARG. See -h for help."
+            exit 1
+            ;;
+    esac
+done
+
+if [ $SUCCESS -eq "0" ]; then
+    echo "Option required. See -h for help."
+    exit 1
+fi
