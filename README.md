@@ -38,7 +38,7 @@ If you aren't sure about the others, the defaults are probably correct, but we r
     CONFIG=/opt/scripts/root_scripts/domains.conf
 
     # Temporary directory for generating keys.
-    TEMP=/tmp/dkim
+    TEMP=/var/dkim_manage
 
     # The folder where OpenDKIM's keys are stored.
     PROD=/etc/opendkim/keys
@@ -71,7 +71,7 @@ Be sure your `domain.conf` file is correct (see `Setup` above). Then, run...
     $ sudo dkim_manage -g
 
 ...to generate the new keys. These will be living in the temporary directory specified at the top of the script file
-(`/tmp/dkim` by default), and OpenDKIM is not yet configured to use them.
+(`/var/dkim_manage` by default), and OpenDKIM is not yet configured to use them.
 
 ### Step 2: Update DNS Records
 
