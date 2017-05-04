@@ -4,7 +4,7 @@ A script to automate most tasks associated with OpenDKIM key rotation.
 ## Credits
 
 - Written by Jason C. McDonald (CodeMouse92) for MousePaw Media.
-- Perl code written by kerframil (#bash, Freenode).
+- Perl code written by Kerin Millar (@kerframil)
 - Additional feedback by Dorian Harmans (@woohooyeah).
 
 ## Setup
