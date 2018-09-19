@@ -82,6 +82,9 @@ function do_move {
     read -p "Are you SURE you want to continue? [y/N] " choice
     case "$choice" in
         y|Y )
+            # Remove old temp data.
+            rm -r $TEMP/old
+            
             # Stop the mail server.
             systemctl stop opendkim postfix
 
