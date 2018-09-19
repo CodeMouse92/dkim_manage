@@ -83,7 +83,7 @@ function do_move {
     case "$choice" in
         y|Y )
             # Remove old temp data.
-            rm -r $TEMP/old
+            rm -rf $TEMP/old
             
             # Stop the mail server.
             systemctl stop opendkim postfix
