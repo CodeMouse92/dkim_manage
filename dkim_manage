@@ -3,7 +3,7 @@
 # OpenDKIM Manager
 # Automates regeneration, testing, and deployment of OpenDKIM keys.
 # AUTHOR(S): Jason C. McDonald
-# VERSION: 1.2
+# VERSION: 1.3
 
 # Copyright (c) 2017 Jason C. McDonald
 # All rights reserved.
@@ -120,6 +120,10 @@ function do_test {
 }
 
 function do_gen {
+    # Save our old temp data first, so we can generate new keys cleanly.
+    mkdir /tmp/opendkim_old
+    mv $TEMP/* /tmp/opendkim_old
+    mv -f /tmp/opendkim_old $TEMP/old
     # For each of the domains we're working with...
     while read -r LINE; do
         IFS='.'
