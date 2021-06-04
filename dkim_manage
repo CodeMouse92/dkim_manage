@@ -62,7 +62,7 @@ mkdir -p $TEMP
 function genkey {
     cd $TEMP
     opendkim-genkey -b 2048 -h rsa-sha256 -r -s "$DATE" -d "$1.$2" -v
-    rename "s/$DATE/$1$2/" ./*.*
+    rename -f "s/$DATE/$1$2/" ./*.*
 }
 
 # Display the text for our DNS update
@@ -123,16 +123,12 @@ function do_test {
 }
 
 function do_gen {
-    if (shopt -s nullglob dotglob; f=(*); ((${#f[@]})))
-    then
-        mkdir -p $TEMP
-    else
-        # Save our old temp data first, so we can generate new keys cleanly.
-        mkdir -p /tmp/opendkim_old
-        mkdir -p $TEMP
-        mv -f $TEMP/* /tmp/opendkim_old/
-        mv -f /tmp/opendkim_old $TEMP/old
-    fi
+    # Save our old temp data first, so we can generate new keys cleanly.
+    mkdir -p /tmp/opendkim_old
+    mkdir -p $TEMP
+    touch $TEMP/~tmp
+    mv -f $TEMP/* /tmp/opendkim_old/
+    mv -f /tmp/opendkim_old $TEMP/old
 
     # For each of the domains we're working with...
     while read -r LINE; do
