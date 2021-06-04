@@ -93,7 +93,7 @@ function do_move {
 
             # Update the key.table
             cp ${KEYTABLE} ${KEYTABLE}.bak
-            sed -ri "s/[0-9]+/${DATE}/g" ${KEYTABLE}
+            sed -ri "s/\:[0-9]+\:/\:${DATE}\:/g" ${KEYTABLE}
 
             # Change the permissions.
             chown ${USER}:${USER} $PROD/*
