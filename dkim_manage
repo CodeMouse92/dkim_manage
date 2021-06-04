@@ -123,10 +123,17 @@ function do_test {
 }
 
 function do_gen {
-    # Save our old temp data first, so we can generate new keys cleanly.
-    mkdir /tmp/opendkim_old
-    mv $TEMP/* /tmp/opendkim_old
-    mv -f /tmp/opendkim_old $TEMP/old
+    if (shopt -s nullglob dotglob; f=(*); ((${#f[@]})))
+    then
+        mkdir -p $TEMP
+    else
+        # Save our old temp data first, so we can generate new keys cleanly.
+        mkdir -p /tmp/opendkim_old
+        mkdir -p $TEMP
+        mv -f $TEMP/* /tmp/opendkim_old/
+        mv -f /tmp/opendkim_old $TEMP/old
+    fi
+
     # For each of the domains we're working with...
     while read -r LINE; do
         IFS='.'
